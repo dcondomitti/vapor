@@ -1,9 +1,9 @@
 package main
 
 import (
-	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 	"strings"
 	"text/template"
 )
@@ -12,17 +12,16 @@ type Configuration struct {
 	Token string
 }
 
-func loadConfiguration() *Configuration {
-	c := new(Configuration)
-	filename := "configuration.txt"
-	token, err := ioutil.ReadFile(filename)
+var cfg Configuration
 
-	if err != nil {
-		panic(err)
+func loadConfiguration(c *Configuration) {
+	token := os.Getenv("ETCD_DISCOVERY_TOKEN")
+
+	if token == "" {
+		panic("ETCD_DISCOVERY_TOKEN not present")
+	} else {
+		c.Token = token
 	}
-
-	c.Token = string(token)
-	return c
 }
 
 type CloudInit struct {
@@ -44,7 +43,6 @@ func generateCloudConfig(c CloudInit, w http.ResponseWriter) {
 }
 
 func viewHandler(w http.ResponseWriter, r *http.Request) {
-	cfg := loadConfiguration()
 	mac_address := r.URL.Path[len("/config/host/"):]
 	ip := strings.Split(r.RemoteAddr, ":")[0]
 	cloud_init := CloudInit{cfg.Token, ip, mac_address}
@@ -54,6 +52,7 @@ func viewHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	loadConfiguration(&cfg)
 	http.HandleFunc("/config/host/", viewHandler)
 	http.ListenAndServe(":8080", nil)
 }
