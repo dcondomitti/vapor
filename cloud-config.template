@@ -54,3 +54,7 @@ write_files:
       # Deal with bad networking
       Environment=ETCD_PEER_HEARTBEAT_INTERVAL=200
       Environment=ETCD_PEER_ELECTION_TIMEOUT=1000
+  - path: /etc/systemd/system/docker.service.d/50-insecure-registry.conf
+    content: |
+      [Service]
+      Environment=DOCKER_OPTS='--insecure-registry="10.50.0.0/16"'
