@@ -41,11 +41,11 @@ coreos:
 
         [Install]
         WantedBy=sockets.target
-    oem:
-      bug-report-url: "https://github.com/coreos/bugs/issues"
-      id: vmware
-      name: VMWare
-      version-id: "9.4.6"
+  oem:
+    bug-report-url: "https://github.com/coreos/bugs/issues"
+    id: vmware
+    name: VMWare
+    version-id: "9.4.6"
 write_files:
   - path: /run/systemd/system/etcd.service.d/30-tuning.conf
     permissions: 0644
