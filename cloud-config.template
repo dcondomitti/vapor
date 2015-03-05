@@ -1,6 +1,7 @@
 #cloud-config
 # for {{.IPAddress}}@{{.MacAddress}}
 
+hostname: {{.Hostname}}
 coreos:
   etcd:
     # generate a new token for each unique cluster from https://discovery.etcd.io/new
