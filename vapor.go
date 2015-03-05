@@ -35,20 +35,23 @@ type CloudInit struct {
 	IPAddress  string
 	MacAddress string
 	Hostname   string
+	EtcdId     string
 }
 
 type Host struct {
 	IpAddress  string
 	MacAddress string
 	Hostname   string
+	EtcdId     string
 }
 
 func NewHost(ip_address string, mac_address string) *Host {
 	mac_address_parts := strings.Split(mac_address, ":")
 	suffix := mac_address_parts[len(mac_address_parts)-2] + mac_address_parts[len(mac_address_parts)-1]
 	hostname := fmt.Sprintf(cfg.HostnameFormat, suffix)
+	etcd_id := strings.Split(hostname, ".")[0]
 
-	h := Host{ip_address, mac_address, hostname}
+	h := Host{ip_address, mac_address, hostname, etcd_id}
 	return &h
 }
 
@@ -69,7 +72,7 @@ func viewHandler(w http.ResponseWriter, r *http.Request) {
 	mac_address := r.URL.Path[len("/config/host/"):]
 	h := NewHost(ip, mac_address)
 
-	cloud_init := CloudInit{cfg.Token, h.IpAddress, h.MacAddress, h.Hostname}
+	cloud_init := CloudInit{cfg.Token, h.IpAddress, h.MacAddress, h.Hostname, h.EtcdId}
 
 	log.Printf("request from %s@%s", ip, mac_address)
 	generateCloudConfig(cloud_init, w)
