@@ -4,8 +4,7 @@
 hostname: {{.Hostname}}
 coreos:
   etcd:
-    # generate a new token for each unique cluster from https://discovery.etcd.io/new
-    # WARNING: replace each time you 'vagrant destroy'
+    name: {{.Hostname}}
     discovery: https://discovery.etcd.io/{{.Token}}
     addr: {{.IPAddress}}:4001
     peer-addr: {{.IPAddress}}:7001
