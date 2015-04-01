@@ -29,3 +29,23 @@ coreos:
 
         [Install]
         WantedBy=sockets.target
+    - name: vulcand.service
+      command: start
+      enable: true
+      content: |
+        [Unit]
+        Description=Vulcan
+        After=docker.service
+
+        [Service]
+        KillMode=none
+        User=core
+        EnvironmentFile=/etc/environment
+        TimeoutStartSec=0
+        ExecStartPre=/usr/bin/docker pull mailgun/vulcand:v0.7.0
+        ExecStartPre=-/usr/bin/docker rm -f vulcand-%i
+        ExecStart=/usr/bin/docker run --rm --name vulcand-%i -p 80:80 -p 8182:8182 mailgun/vulcand:0.7.0 vulcand -apiInterface=0.0.0.0 -interface=0.0.0.0 -etcd=http://${COREOS_PRIVATE_IPV4}:4001 -port=80 -apiPort=8182
+        ExecStop=/usr/bin/docker kill vulcand-%i
+
+        [X-Fleet]
+        Conflicts=vulcan*
