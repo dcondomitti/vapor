@@ -11,6 +11,18 @@ coreos:
   fleet:
     public-ip: {{.IPAddress}}
   units:
+    - name: vmtoolsd.service
+      command: start
+      content: |
+        [Unit]
+        Description=VMware Tools Agent
+        Documentation=http://open-vm-tools.sourceforge.net/
+        ConditionVirtualization=vmware
+
+        [Service]
+        ExecStartPre=/usr/bin/ln -sfT /usr/share/oem/vmware-tools /etc/vmware-tools
+        ExecStart=/usr/share/oem/bin/vmtoolsd
+        TimeoutStopSec=5
     - name: etcd.service
       command: start
     - name: fleet.service
@@ -23,7 +35,7 @@ coreos:
         Description=Docker Socket for the API
 
         [Socket]
-        ListenStream=2375
+        ListenStream=127.0.0.1:2375
         Service=docker.service
         BindIPv6Only=both
 
@@ -49,3 +61,20 @@ coreos:
 
         [X-Fleet]
         Conflicts=vulcan*
+  oem:
+    bug-report-url: "https://github.com/coreos/bugs/issues"
+    id: vmware
+    name: VMWare
+    version-id: "9.4.6"
+write_files:
+  - path: /run/systemd/system/etcd.service.d/30-tuning.conf
+    permissions: 0644
+    content: |
+      [Service]
+      # Deal with bad networking
+      Environment=ETCD_PEER_HEARTBEAT_INTERVAL=200
+      Environment=ETCD_PEER_ELECTION_TIMEOUT=1000
+  - path: /etc/systemd/system/docker.service.d/50-insecure-registry.conf
+    content: |
+      [Service]
+      Environment=DOCKER_OPTS='--insecure-registry="10.50.0.0/16"'

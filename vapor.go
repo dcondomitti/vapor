@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"regexp"
 	"strings"
 	"text/template"
 )
@@ -67,14 +68,32 @@ func generateCloudConfig(c CloudInit, w http.ResponseWriter) {
 	}
 }
 
+func getIpAddress(r *http.Request) string {
+	remote_ip := strings.Split(r.RemoteAddr, ":")[0]
+	real_ip := r.Header.Get("X-Real-Ip")
+	if real_ip != "" {
+		return real_ip
+	} else {
+		return remote_ip
+	}
+}
+
 func viewHandler(w http.ResponseWriter, r *http.Request) {
-	ip := strings.Split(r.RemoteAddr, ":")[0]
+	ip_address := getIpAddress(r)
+	rx, _ := regexp.Compile("^/config/host/([0-9a-f]{2}:){5}[0-9a-f]{2}/?$")
+	match := rx.FindString(r.URL.Path)
+
+	if match == "" {
+		http.Error(w, "Invalid MAC address", http.StatusBadRequest)
+		return
+	}
+
 	mac_address := r.URL.Path[len("/config/host/"):]
-	h := NewHost(ip, mac_address)
+	h := NewHost(ip_address, mac_address)
 
 	cloud_init := CloudInit{cfg.Token, h.IpAddress, h.MacAddress, h.Hostname, h.EtcdId}
 
-	log.Printf("request from %s@%s", ip, mac_address)
+	log.Printf("request from %s@%s", ip_address, mac_address)
 	generateCloudConfig(cloud_init, w)
 }
 
